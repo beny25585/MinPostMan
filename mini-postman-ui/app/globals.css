@@ -1,0 +1,469 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════
+   MINI POSTMAN — DESIGN SYSTEM
+   Dark, refined, developer-tool luxury (Linear / Vercel inspired)
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Base Colors ── */
+  --background: #09090b;
+  --foreground: #fafafa;
+
+  /* ── Card / Surface ── */
+  --card: #111113;
+  --card-foreground: #fafafa;
+
+  /* ── Muted / Subtle ── */
+  --muted: #1a1a1e;
+  --muted-foreground: #71717a;
+
+  /* ── Popover ── */
+  --popover: #111113;
+  --popover-foreground: #fafafa;
+
+  /* ── Border & Input ── */
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #6366f1;
+
+  /* ── Primary (Indigo) ── */
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+
+  /* ── Secondary ── */
+  --secondary: #1a1a1e;
+  --secondary-foreground: #fafafa;
+
+  /* ── Destructive ── */
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+
+  /* ── Accent ── */
+  --accent: #1a1a1e;
+  --accent-foreground: #fafafa;
+
+  /* ── Sidebar ── */
+  --sidebar-bg: #0c0c0e;
+  --sidebar-border: #1e1e22;
+  --sidebar-hover: #161618;
+  --sidebar-active: #1c1c20;
+
+  /* ── Method Colors ── */
+  --method-get: #22c55e;
+  --method-post: #3b82f6;
+  --method-put: #f59e0b;
+  --method-delete: #ef4444;
+  --method-patch: #a855f7;
+  --method-head: #6b7280;
+  --method-options: #6b7280;
+
+  /* ── Status Colors ── */
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-error: #f43f5e;
+  --status-info: #06b6d4;
+
+  /* ── Gradient ── */
+  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+  --gradient-primary-hover: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%);
+  --gradient-glow: 0 0 20px rgba(99, 102, 241, 0.4), 0 0 60px rgba(139, 92, 246, 0.15);
+
+  /* ── Radius ── */
+  --radius: 0.625rem;
+
+  /* ── Shadows ── */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-method-get: var(--method-get);
+  --color-method-post: var(--method-post);
+  --color-method-put: var(--method-put);
+  --color-method-delete: var(--method-delete);
+  --color-method-patch: var(--method-patch);
+  --color-status-success: var(--status-success);
+  --color-status-warning: var(--status-warning);
+  --color-status-error: var(--status-error);
+  --color-status-info: var(--status-info);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* ── Custom Animations ── */
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.3s ease-out;
+  --animate-slide-down: slide-down 0.2s ease-out;
+  --animate-scale-in: scale-in 0.2s ease-out;
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+  --animate-spin-slow: spin 1.5s linear infinite;
+  --animate-shimmer: shimmer 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   KEYFRAMES
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(99, 102, 241, 0.3); }
+  50% { box-shadow: 0 0 24px rgba(99, 102, 241, 0.6), 0 0 48px rgba(139, 92, 246, 0.2); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════════════ */
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CUSTOM SCROLLBAR
+   ═══════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #27272a transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   JSON SYNTAX HIGHLIGHTING
+   ═══════════════════════════════════════════════════════════ */
+
+.json-key { color: #93c5fd; }
+.json-string { color: #86efac; }
+.json-number { color: #fbbf24; }
+.json-boolean { color: #c084fc; }
+.json-null { color: #71717a; font-style: italic; }
+.json-bracket { color: #71717a; }
+.json-colon { color: #52525b; }
+
+/* ═══════════════════════════════════════════════════════════
+   GRADIENT SEND BUTTON
+   ═══════════════════════════════════════════════════════════ */
+
+.btn-gradient {
+  background: var(--gradient-primary);
+  background-size: 200% 200%;
+  transition: all 0.3s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-primary-hover);
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+
+.btn-gradient:hover::before {
+  opacity: 1;
+}
+
+.btn-gradient:hover {
+  box-shadow: var(--gradient-glow);
+  transform: translateY(-1px);
+}
+
+.btn-gradient:active {
+  transform: translateY(0);
+}
+
+.btn-gradient:disabled {
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-gradient:disabled::before {
+  display: none;
+}
+
+.btn-gradient span,
+.btn-gradient svg {
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STATUS BADGE
+   ═══════════════════════════════════════════════════════════ */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.status-badge-success {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-badge-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.status-badge-error {
+  background: rgba(244, 63, 94, 0.12);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.2);
+}
+
+.status-badge-info {
+  background: rgba(6, 182, 212, 0.12);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   METHOD BADGE
+   ═══════════════════════════════════════════════════════════ */
+
+.method-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  font-family: var(--font-geist-mono), monospace;
+}
+
+.method-badge-get { background: rgba(34, 197, 94, 0.12); color: #4ade80; }
+.method-badge-post { background: rgba(59, 130, 246, 0.12); color: #60a5fa; }
+.method-badge-put { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+.method-badge-delete { background: rgba(239, 68, 68, 0.12); color: #f87171; }
+.method-badge-patch { background: rgba(168, 85, 247, 0.12); color: #c084fc; }
+.method-badge-head { background: rgba(107, 114, 128, 0.12); color: #9ca3af; }
+.method-badge-options { background: rgba(107, 114, 128, 0.12); color: #9ca3af; }
+
+/* ═══════════════════════════════════════════════════════════
+   SIDEBAR HISTORY ITEM
+   ═══════════════════════════════════════════════════════════ */
+
+.history-item {
+  position: relative;
+  padding: 10px 12px 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+  border: 1px solid transparent;
+}
+
+.history-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  border-radius: 0 2px 2px 0;
+  background: var(--primary);
+  transition: height 0.2s ease-out;
+}
+
+.history-item:hover {
+  background: var(--sidebar-hover);
+  border-color: var(--sidebar-border);
+}
+
+.history-item:hover::before {
+  height: 60%;
+}
+
+.history-item-active {
+  background: var(--sidebar-active);
+  border-color: var(--sidebar-border);
+}
+
+.history-item-active::before {
+  height: 60%;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LOADING SPINNER
+   ═══════════════════════════════════════════════════════════ */
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSE PANEL ANIMATION
+   ═══════════════════════════════════════════════════════════ */
+
+.response-panel {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TABS UNDERLINE INDICATOR
+   ═══════════════════════════════════════════════════════════ */
+
+.tab-underline {
+  position: relative;
+}
+
+.tab-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gradient-primary);
+  border-radius: 1px;
+  transform: scaleX(0);
+  transition: transform 0.2s ease-out;
+}
+
+.tab-underline[data-state='active']::after {
+  transform: scaleX(1);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   COPY BUTTON
+   ═══════════════════════════════════════════════════════════ */
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+}
+
+.copy-btn:hover {
+  color: var(--foreground);
+  background: var(--muted);
+  border-color: var(--border);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NOISE TEXTURE OVERLAY (subtle grain)
+   ═══════════════════════════════════════════════════════════ */
+
+.noise-overlay::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  z-index: 9999;
+}
