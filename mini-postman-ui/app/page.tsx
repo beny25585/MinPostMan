@@ -351,9 +351,19 @@ export default function Home() {
   }, [response]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      if (!loading && url.trim()) sendRequest();
+    if (e.key === "Enter") {
+      const target = e.target as HTMLElement;
+      const isTextarea = target.tagName === "TEXTAREA";
+      const isInput = target.tagName === "INPUT";
+      
+      if (isTextarea && !e.metaKey && !e.ctrlKey) {
+        return;
+      }
+      
+      if ((isInput || e.metaKey || e.ctrlKey) && !loading && url.trim()) {
+        e.preventDefault();
+        sendRequest();
+      }
     }
   };
 
