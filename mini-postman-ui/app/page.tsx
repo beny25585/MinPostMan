@@ -203,7 +203,25 @@ export default function Home() {
   const [isSaveRequestModalOpen, setIsSaveRequestModalOpen] = useState(false);
   const [expandedCollections, setExpandedCollections] = useState<Set<number>>(new Set());
 
+  const isValidUrl = (urlString: string): boolean => {
+    try {
+      new URL(urlString);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const sendRequest = async () => {
+    if (!isValidUrl(url)) {
+      setResponse({
+        error: "Invalid URL format. Please enter a valid URL (e.g., https://api.example.com)",
+        status: 404,
+      });
+      setResponseTime(0);
+      return;
+    }
+
     setLoading(true);
     const startTime = Date.now();
 
@@ -699,7 +717,15 @@ export default function Home() {
         onClose={() => setIsSaveRequestModalOpen(false)}
         onSave={handleSaveRequest}
         collections={collections}
-        defaultName={url ? new URL(url).pathname.split('/').pop() || url : ''}
+        defaultName={(() => {
+          if (!url.trim()) return '';
+          try {
+            const pathname = new URL(url).pathname;
+            return pathname.split('/').pop() || pathname || url;
+          } catch {
+            return url;
+          }
+        })()}
       />
     </div>
   );
