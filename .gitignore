@@ -92,6 +92,10 @@ next-env.d.ts
 # Project Specific
 # ===============================
 
+# Development tools
+.cocoindex_code/
+.ruff_cache/
+
 # API Tool
 api_tool/db.sqlite3
 api_tool/*.log
