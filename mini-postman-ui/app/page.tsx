@@ -14,7 +14,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RequestBodyEditor } from "@/components/RequestBodyEditor";
 import { HeadersEditor } from "@/components/HeadersEditor";
-import { Send, Clock, Copy, Check, ChevronDown, ChevronRight, Zap } from "lucide-react";
+import { CollectionModal } from "@/components/CollectionModal";
+import { SaveRequestModal } from "@/components/SaveRequestModal";
+import { Send, Clock, Copy, Check, ChevronDown, ChevronRight, Zap, Folder, Plus, Bookmark } from "lucide-react";
 
 interface HistoryItem {
   id: number;
@@ -27,6 +29,23 @@ interface HistoryItem {
 interface Header {
   key: string;
   value: string;
+}
+
+interface Collection {
+  id: number;
+  name: string;
+  description?: string;
+  request_count: number;
+}
+
+interface SavedRequest {
+  id: number;
+  collection_id: number;
+  name: string;
+  url: string;
+  method: string;
+  headers: Record<string, string> | null;
+  body: unknown;
 }
 
 function buildHeadersObject(headers: Header[]): Record<string, string> {
@@ -71,7 +90,7 @@ function getStatusBadgeClass(status: number): string {
 
 function syntaxHighlightJSON(json: string): string {
   return json.replace(
-    /("(\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
+    /("(\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
     (match) => {
       let cls = "json-number";
       if (/^"/.test(match)) {
@@ -175,6 +194,14 @@ export default function Home() {
   const [responseTab, setResponseTab] = useState("body");
   const [copied, setCopied] = useState(false);
   const [activeHistoryId, setActiveHistoryId] = useState<number | null>(null);
+  
+  // Collections state
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [savedRequests, setSavedRequests] = useState<SavedRequest[]>([]);
+  const [activeCollectionId, setActiveCollectionId] = useState<number | null>(null);
+  const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
+  const [isSaveRequestModalOpen, setIsSaveRequestModalOpen] = useState(false);
+  const [expandedCollections, setExpandedCollections] = useState<Set<number>>(new Set());
 
   const sendRequest = async () => {
     setLoading(true);
@@ -213,11 +240,89 @@ export default function Home() {
     }
   };
 
+  const fetchCollections = async () => {
+    try {
+      const res = await axios.get("http://127.0.0.1:8000/api/collections/");
+      setCollections(res.data);
+    } catch (err) {
+      console.error("Failed to fetch collections:", err);
+    }
+  };
+
+  const fetchSavedRequests = async (collectionId: number) => {
+    try {
+      const res = await axios.get(`http://127.0.0.1:8000/api/saved-requests/?collection_id=${collectionId}`);
+      setSavedRequests(res.data);
+    } catch (err) {
+      console.error("Failed to fetch saved requests:", err);
+    }
+  };
+
+  const handleCreateCollection = async (name: string, description: string) => {
+    try {
+      const res = await axios.post("http://127.0.0.1:8000/api/collections/", {
+        name,
+        description,
+      });
+      setCollections([...collections, res.data]);
+    } catch (err) {
+      console.error("Failed to create collection:", err);
+    }
+  };
+
+  const handleSaveRequest = async (collectionId: number, name: string) => {
+    try {
+      await axios.post("http://127.0.0.1:8000/api/saved-requests/", {
+        collection_id: collectionId,
+        name,
+        url,
+        method,
+        headers: buildHeadersObject(headers),
+        body: parseRequestBody(requestBody),
+      });
+      fetchCollections();
+      if (expandedCollections.has(collectionId)) {
+        fetchSavedRequests(collectionId);
+      }
+    } catch (err) {
+      console.error("Failed to save request:", err);
+    }
+  };
+
   const handleHistoryClick = useCallback((item: HistoryItem) => {
     setUrl(item.url);
     setMethod(item.method);
     setActiveHistoryId(item.id);
+    setActiveCollectionId(null);
   }, []);
+
+  const handleSavedRequestClick = (request: SavedRequest) => {
+    setUrl(request.url);
+    setMethod(request.method);
+    if (request.headers) {
+      const headerArray = Object.entries(request.headers).map(([key, value]) => ({
+        key,
+        value,
+      }));
+      setHeaders(headerArray);
+    }
+    if (request.body) {
+      setRequestBody(typeof request.body === "string" ? request.body : JSON.stringify(request.body, null, 2));
+    }
+    setActiveCollectionId(request.collection_id);
+    setActiveHistoryId(null);
+  };
+
+  const toggleCollection = (collectionId: number) => {
+    const newExpanded = new Set(expandedCollections);
+    if (newExpanded.has(collectionId)) {
+      newExpanded.delete(collectionId);
+    } else {
+      newExpanded.add(collectionId);
+      fetchSavedRequests(collectionId);
+    }
+    setExpandedCollections(newExpanded);
+  };
 
   const handleCopy = useCallback(async () => {
     if (!response) return;
@@ -236,6 +341,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchHistory();
+    fetchCollections();
   }, []);
 
   const responseStatus = response ? (response as { status?: number }).status : undefined;
@@ -244,7 +350,7 @@ export default function Home() {
   return (
     <div className="flex h-screen bg-background noise-overlay" onKeyDown={handleKeyDown}>
       {/* ── Sidebar ── */}
-      <aside className="w-72 border-r border-sidebar-border bg-sidebar-bg flex flex-col shrink-0">
+      <aside className="w-80 border-r border-sidebar-border bg-sidebar-bg flex flex-col shrink-0">
         <div className="px-5 py-4 border-b border-sidebar-border">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
@@ -256,7 +362,93 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="px-4 py-3 border-b border-sidebar-border">
+        {/* Collections Section */}
+        <div className="px-4 py-3 border-b border-sidebar-border flex items-center justify-between">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            Collections
+          </p>
+          <button
+            onClick={() => setIsCollectionModalOpen(true)}
+            className="p-1 rounded hover:bg-sidebar-hover transition-colors"
+            title="Create Collection"
+          >
+            <Plus className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-300" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-3 py-2">
+          {collections.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 px-4">
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mb-2">
+                <Folder className="w-3.5 h-3.5 text-muted-foreground" />
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                No collections yet.
+                <br />
+                <span className="text-zinc-500">Create one to organize requests.</span>
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {collections.map((collection) => (
+                <div key={collection.id}>
+                  <div
+                    className="flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer hover:bg-sidebar-hover transition-colors"
+                    onClick={() => toggleCollection(collection.id)}
+                  >
+                    {expandedCollections.has(collection.id) ? (
+                      <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5 text-zinc-500" />
+                    )}
+                    <Folder className="w-4 h-4 text-indigo-400" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-foreground truncate">
+                        {collection.name}
+                      </div>
+                      {collection.description && (
+                        <div className="text-xs text-zinc-500 truncate">
+                          {collection.description}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-xs text-zinc-600 bg-zinc-800/50 px-1.5 py-0.5 rounded">
+                      {collection.request_count}
+                    </span>
+                  </div>
+                  
+                  {expandedCollections.has(collection.id) && (
+                    <div className="ml-6 mt-1 space-y-0.5">
+                      {savedRequests
+                        .filter((r) => r.collection_id === collection.id)
+                        .map((request) => (
+                          <div
+                            key={request.id}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md cursor-pointer transition-colors ${
+                              activeCollectionId === collection.id && url === request.url
+                                ? "bg-sidebar-active"
+                                : "hover:bg-sidebar-hover"
+                            }`}
+                            onClick={() => handleSavedRequestClick(request)}
+                          >
+                            <span className={`method-badge ${getMethodColor(request.method)} text-[10px]`}>
+                              {request.method}
+                            </span>
+                            <span className="text-xs text-zinc-400 truncate flex-1">
+                              {request.name}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* History Section */}
+        <div className="px-4 py-3 border-t border-b border-sidebar-border">
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
             History
           </p>
@@ -264,9 +456,9 @@ export default function Home() {
 
         <div className="flex-1 overflow-y-auto px-3 py-2">
           {history.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 px-4">
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-3">
-                <Send className="w-4 h-4 text-muted-foreground" />
+            <div className="flex flex-col items-center justify-center py-8 px-4">
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mb-2">
+                <Send className="w-3.5 h-3.5 text-muted-foreground" />
               </div>
               <p className="text-xs text-muted-foreground text-center">
                 No requests yet.
@@ -345,6 +537,15 @@ export default function Home() {
                   <span>Send</span>
                 </>
               )}
+            </button>
+
+            <button
+              onClick={() => setIsSaveRequestModalOpen(true)}
+              disabled={!url.trim()}
+              className="h-10 px-4 rounded-lg text-sm font-medium bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            >
+              <Bookmark className="w-4 h-4" />
+              <span>Save</span>
             </button>
           </div>
           <p className="text-[11px] text-zinc-600 mt-2 ml-[132px]">
@@ -460,7 +661,7 @@ export default function Home() {
               {responseTab === "body" ? (
                 <div className="bg-muted/50 rounded-lg border border-border p-4 overflow-auto">
                   <pre className="text-sm font-mono leading-relaxed whitespace-pre-wrap">
-                    <CollapsibleJSON data={response} />
+                    <CollapsibleJSON data={(response as { body?: unknown }).body || response} />
                   </pre>
                 </div>
               ) : (
@@ -485,6 +686,21 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {/* Modals */}
+      <CollectionModal
+        isOpen={isCollectionModalOpen}
+        onClose={() => setIsCollectionModalOpen(false)}
+        onSave={handleCreateCollection}
+      />
+      
+      <SaveRequestModal
+        isOpen={isSaveRequestModalOpen}
+        onClose={() => setIsSaveRequestModalOpen(false)}
+        onSave={handleSaveRequest}
+        collections={collections}
+        defaultName={url ? new URL(url).pathname.split('/').pop() || url : ''}
+      />
     </div>
   );
 }
