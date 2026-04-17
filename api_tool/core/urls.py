@@ -1,11 +1,11 @@
-from django.contrib import admin
 from django.urls import path
 from core import views
-from rest_framework.urlpatterns import format_suffix_patterns
-
 
 urlpatterns = [
     path("send/", views.SendRequest.as_view()),
     path("history/", views.RequestHistory.as_view()),
+    path("collections/", views.CollectionList.as_view()),
+    path("collections/<int:pk>/", views.CollectionDetail.as_view()),
+    path("saved-requests/", views.SavedRequestList.as_view()),
+    path("saved-requests/<int:pk>/", views.SavedRequestDetail.as_view()),
 ]
-urlpatterns = format_suffix_patterns(urlpatterns)
