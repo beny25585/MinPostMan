@@ -120,3 +120,5 @@ logs/
 # Database backups
 *.dump
 *.sql.gz
+
+AGENTS.md
