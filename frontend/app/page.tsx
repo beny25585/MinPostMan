@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -207,6 +208,7 @@ export default function Home() {
   const [expandedCollections, setExpandedCollections] = useState<Set<number>>(new Set());
 
   const { user, logout: authLogout } = useAuth();
+  const router = useRouter();
 
   const isValidUrl = (urlString: string): boolean => {
     try {
@@ -430,7 +432,7 @@ export default function Home() {
               <button
                 onClick={async () => {
                   await authLogout();
-                  window.location.href = '/login';
+                  router.push('/login');
                 }}
                 className="p-1.5 rounded-lg hover:bg-sidebar-hover transition-colors"
                 title="Logout"
