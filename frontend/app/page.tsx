@@ -19,6 +19,8 @@ import { SaveRequestModal } from "@/components/SaveRequestModal";
 import { Send, Clock, Copy, Check, ChevronDown, ChevronRight, Zap, Folder, Plus, Bookmark, LogOut, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+
 interface HistoryItem {
   id: number;
   url: string;
@@ -229,7 +231,7 @@ export default function Home() {
     const startTime = Date.now();
 
     try {
-      const res = await axios.post("http://127.0.0.1:8000/api/send/", {
+      const res = await axios.post(`${API_URL}/send/`, {
         url,
         method,
         headers: buildHeadersObject(headers),
@@ -254,7 +256,7 @@ export default function Home() {
 
   const fetchHistory = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/history/");
+      const res = await axios.get(`${API_URL}/history/`);
       setHistory(res.data);
     } catch (err) {
       console.error("Failed to fetch history:", err);
@@ -263,7 +265,7 @@ export default function Home() {
 
   const fetchCollections = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/collections/");
+      const res = await axios.get(`${API_URL}/collections/`);
       setCollections(res.data);
     } catch (err) {
       console.error("Failed to fetch collections:", err);
@@ -272,7 +274,7 @@ export default function Home() {
 
   const fetchSavedRequests = async (collectionId: number) => {
     try {
-      const res = await axios.get(`http://127.0.0.1:8000/api/saved-requests/?collection_id=${collectionId}`);
+      const res = await axios.get(`${API_URL}/saved-requests/?collection_id=${collectionId}`);
       setSavedRequests(res.data);
     } catch (err) {
       console.error("Failed to fetch saved requests:", err);
@@ -281,7 +283,7 @@ export default function Home() {
 
   const handleCreateCollection = async (name: string, description: string) => {
     try {
-      const res = await axios.post("http://127.0.0.1:8000/api/collections/", {
+      const res = await axios.post(`${API_URL}/collections/`, {
         name,
         description,
       });
@@ -293,7 +295,7 @@ export default function Home() {
 
   const handleSaveRequest = async (collectionId: number, name: string) => {
     try {
-      await axios.post("http://127.0.0.1:8000/api/saved-requests/", {
+      await axios.post(`${API_URL}/saved-requests/`, {
         collection_id: collectionId,
         name,
         url,
@@ -312,7 +314,7 @@ export default function Home() {
 
   const handleDeleteCollection = async (id: number) => {
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/collections/${id}/`);
+      await axios.delete(`${API_URL}/collections/${id}/`);
       setCollections(collections.filter(c => c.id !== id));
       if (activeCollectionId === id) {
         setActiveCollectionId(null);
@@ -324,7 +326,7 @@ export default function Home() {
 
   const handleDeleteAllCollections = async () => {
     try {
-      await Promise.all(collections.map(c => axios.delete(`http://127.0.0.1:8000/api/collections/${c.id}/`)));
+      await Promise.all(collections.map(c => axios.delete(`${API_URL}/collections/${c.id}/`)));
       setCollections([]);
       setActiveCollectionId(null);
     } catch (err) {
