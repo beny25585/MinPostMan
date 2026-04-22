@@ -1,11 +1,17 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 import requests
 from .models import RequestLog, Collection, SavedRequest
 
 
 class SendRequest(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         excluded_headers = ["content-encoding", "transfer-encoding", "connection"]
 
@@ -21,7 +27,7 @@ class SendRequest(APIView):
 
             try:
                 body = response.json()
-            except:
+            except (ValueError, Exception):
                 body = response.text
 
             headers = {
@@ -31,6 +37,7 @@ class SendRequest(APIView):
             }
 
             RequestLog.objects.create(
+                user=request.user,
                 url=data.get("url"),
                 method=data.get("method", "GET"),
                 request_headers=data.get("headers", {}),
@@ -51,8 +58,10 @@ class SendRequest(APIView):
 
 
 class RequestHistory(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        logs = RequestLog.objects.all().order_by("-created_at")[:50]
+        logs = RequestLog.objects.filter(user=request.user).order_by("-created_at")[:50]
 
         data = [
             {
@@ -69,8 +78,10 @@ class RequestHistory(APIView):
 
 
 class CollectionList(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        collections = Collection.objects.all()
+        collections = Collection.objects.filter(user=request.user)
         data = [
             {
                 "id": c.id,
@@ -87,7 +98,9 @@ class CollectionList(APIView):
     def post(self, request):
         data = request.data
         collection = Collection.objects.create(
-            name=data.get("name"), description=data.get("description", "")
+            user=request.user,
+            name=data.get("name"),
+            description=data.get("description", ""),
         )
         return Response(
             {
@@ -102,9 +115,11 @@ class CollectionList(APIView):
 
 
 class CollectionDetail(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, pk):
         try:
-            collection = Collection.objects.get(pk=pk)
+            collection = Collection.objects.get(pk=pk, user=request.user)
             requests_data = [
                 {
                     "id": r.id,
@@ -133,7 +148,7 @@ class CollectionDetail(APIView):
 
     def put(self, request, pk):
         try:
-            collection = Collection.objects.get(pk=pk)
+            collection = Collection.objects.get(pk=pk, user=request.user)
             data = request.data
             collection.name = data.get("name", collection.name)
             collection.description = data.get("description", collection.description)
@@ -153,7 +168,7 @@ class CollectionDetail(APIView):
 
     def delete(self, request, pk):
         try:
-            collection = Collection.objects.get(pk=pk)
+            collection = Collection.objects.get(pk=pk, user=request.user)
             collection.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Collection.DoesNotExist:
@@ -163,12 +178,16 @@ class CollectionDetail(APIView):
 
 
 class SavedRequestList(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         collection_id = request.query_params.get("collection_id")
         if collection_id:
-            saved_requests = SavedRequest.objects.filter(collection_id=collection_id)
+            saved_requests = SavedRequest.objects.filter(
+                collection_id=collection_id, collection__user=request.user
+            )
         else:
-            saved_requests = SavedRequest.objects.all()
+            saved_requests = SavedRequest.objects.filter(collection__user=request.user)
 
         data = [
             {
@@ -189,8 +208,11 @@ class SavedRequestList(APIView):
     def post(self, request):
         data = request.data
         try:
-            collection = Collection.objects.get(pk=data.get("collection_id"))
+            collection = Collection.objects.get(
+                pk=data.get("collection_id"), user=request.user
+            )
             saved_request = SavedRequest.objects.create(
+                user=request.user,
                 collection=collection,
                 name=data.get("name"),
                 url=data.get("url"),
@@ -218,9 +240,11 @@ class SavedRequestList(APIView):
 
 
 class SavedRequestDetail(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, pk):
         try:
-            saved_request = SavedRequest.objects.get(pk=pk)
+            saved_request = SavedRequest.objects.get(pk=pk, collection__user=request.user)
             return Response(
                 {
                     "id": saved_request.id,
@@ -241,7 +265,7 @@ class SavedRequestDetail(APIView):
 
     def put(self, request, pk):
         try:
-            saved_request = SavedRequest.objects.get(pk=pk)
+            saved_request = SavedRequest.objects.get(pk=pk, collection__user=request.user)
             data = request.data
             saved_request.name = data.get("name", saved_request.name)
             saved_request.url = data.get("url", saved_request.url)
@@ -265,10 +289,94 @@ class SavedRequestDetail(APIView):
 
     def delete(self, request, pk):
         try:
-            saved_request = SavedRequest.objects.get(pk=pk)
+            saved_request = SavedRequest.objects.get(pk=pk, collection__user=request.user)
             saved_request.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except SavedRequest.DoesNotExist:
             return Response(
                 {"error": "Saved request not found"}, status=status.HTTP_404_NOT_FOUND
             )
+
+
+class RegisterView(APIView):
+    permission_classes = []
+
+    def post(self, request):
+        data = request.data
+        username = data.get("username")
+        password = data.get("password")
+        first_name = data.get("first_name", "")
+        last_name = data.get("last_name", "")
+
+        if not username or not password:
+            return Response(
+                {"error": "Username and password required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {"error": "Username already exists"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = User.objects.create_user(
+            username=username,
+            password=password,
+            first_name=first_name,
+            last_name=last_name
+        )
+        token = Token.objects.create(user=user)
+
+        full_name = f"{first_name} {last_name}".strip() or username
+
+        return Response(
+            {
+                "token": token.key,
+                "username": username,
+                "first_name": first_name,
+                "last_name": last_name,
+                "full_name": full_name
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class LoginView(APIView):
+    permission_classes = []
+
+    def post(self, request):
+        data = request.data
+        username = data.get("username")
+        password = data.get("password")
+
+        user = authenticate(username=username, password=password)
+
+        if user is None:
+            return Response(
+                {"error": "Invalid credentials"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        token, _ = Token.objects.get_or_create(user=user)
+
+        full_name = f"{user.first_name} {user.last_name}".strip() or user.username
+
+        return Response({
+            "token": token.key,
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "full_name": full_name
+        })
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            request.user.auth_token.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Token.DoesNotExist:
+            return Response(status=status.HTTP_204_NO_CONTENT)

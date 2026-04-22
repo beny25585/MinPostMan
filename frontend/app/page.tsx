@@ -16,7 +16,8 @@ import { RequestBodyEditor } from "@/components/RequestBodyEditor";
 import { HeadersEditor } from "@/components/HeadersEditor";
 import { CollectionModal } from "@/components/CollectionModal";
 import { SaveRequestModal } from "@/components/SaveRequestModal";
-import { Send, Clock, Copy, Check, ChevronDown, ChevronRight, Zap, Folder, Plus, Bookmark } from "lucide-react";
+import { Send, Clock, Copy, Check, ChevronDown, ChevronRight, Zap, Folder, Plus, Bookmark, LogOut, Trash2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface HistoryItem {
   id: number;
@@ -203,6 +204,8 @@ export default function Home() {
   const [isSaveRequestModalOpen, setIsSaveRequestModalOpen] = useState(false);
   const [expandedCollections, setExpandedCollections] = useState<Set<number>>(new Set());
 
+  const { user, logout: authLogout } = useAuth();
+
   const isValidUrl = (urlString: string): boolean => {
     try {
       new URL(urlString);
@@ -307,6 +310,28 @@ export default function Home() {
     }
   };
 
+  const handleDeleteCollection = async (id: number) => {
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/collections/${id}/`);
+      setCollections(collections.filter(c => c.id !== id));
+      if (activeCollectionId === id) {
+        setActiveCollectionId(null);
+      }
+    } catch (err) {
+      console.error("Failed to delete collection:", err);
+    }
+  };
+
+  const handleDeleteAllCollections = async () => {
+    try {
+      await Promise.all(collections.map(c => axios.delete(`http://127.0.0.1:8000/api/collections/${c.id}/`)));
+      setCollections([]);
+      setActiveCollectionId(null);
+    } catch (err) {
+      console.error("Failed to delete collections:", err);
+    }
+  };
+
   const handleHistoryClick = useCallback((item: HistoryItem) => {
     setUrl(item.url);
     setMethod(item.method);
@@ -380,13 +405,37 @@ export default function Home() {
       {/* ── Sidebar ── */}
       <aside className="w-80 border-r border-sidebar-border bg-sidebar-bg flex flex-col shrink-0">
         <div className="px-5 py-4 border-b border-sidebar-border">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <Zap className="w-3.5 h-3.5 text-white" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                <Zap className="w-3.5 h-3.5 text-white" />
+              </div>
+              <h1 className="text-sm font-semibold tracking-tight text-foreground">
+                Mini Postman
+              </h1>
             </div>
-            <h1 className="text-sm font-semibold tracking-tight text-foreground">
-              Mini Postman
-            </h1>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                  <span className="text-[11px] font-bold text-white">
+                    {user?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || user?.username?.charAt(0).toUpperCase() || '?'}
+                  </span>
+                </div>
+                <span className="text-xs font-medium text-zinc-400 hidden sm:inline">
+                  {user?.full_name || user?.username || 'User'}
+                </span>
+              </div>
+              <button
+                onClick={async () => {
+                  await authLogout();
+                  window.location.href = '/login';
+                }}
+                className="p-1.5 rounded-lg hover:bg-sidebar-hover transition-colors"
+                title="Logout"
+              >
+                <LogOut className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-300" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -395,13 +444,28 @@ export default function Home() {
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
             Collections
           </p>
-          <button
-            onClick={() => setIsCollectionModalOpen(true)}
-            className="p-1 rounded hover:bg-sidebar-hover transition-colors"
-            title="Create Collection"
-          >
-            <Plus className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-300" />
-          </button>
+          <div className="flex items-center gap-1">
+            {collections.length > 0 && (
+              <button
+                onClick={() => {
+                  if (confirm("Are you sure you want to delete ALL collections? This cannot be undone.")) {
+                    handleDeleteAllCollections();
+                  }
+                }}
+                className="p-1 rounded hover:bg-red-500/20 transition-colors"
+                title="Delete All Collections"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-zinc-500 hover:text-red-400" />
+              </button>
+            )}
+            <button
+              onClick={() => setIsCollectionModalOpen(true)}
+              className="p-1 rounded hover:bg-sidebar-hover transition-colors"
+              title="Create Collection"
+            >
+              <Plus className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-300" />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-2">
@@ -443,6 +507,18 @@ export default function Home() {
                     <span className="text-xs text-zinc-600 bg-zinc-800/50 px-1.5 py-0.5 rounded">
                       {collection.request_count}
                     </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm("Are you sure you want to delete this collection?")) {
+                          handleDeleteCollection(collection.id);
+                        }
+                      }}
+                      className="p-1 rounded hover:bg-red-500/20 transition-colors"
+                      title="Delete Collection"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-zinc-500 hover:text-red-400" />
+                    </button>
                   </div>
                   
                   {expandedCollections.has(collection.id) && (
@@ -736,7 +812,8 @@ export default function Home() {
             return url;
           }
         })()}
-      />
+        onCreateCollection={() => setIsCollectionModalOpen(true)}
+        />
     </div>
   );
 }

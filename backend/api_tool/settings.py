@@ -1,5 +1,9 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,6 +26,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework.authtoken",
     "corsheaders",
     "core",
 ]
@@ -58,7 +63,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "api_tool.wsgi.application"
 ASGI_APPLICATION = "api_tool.asgi.application"
 
-_db_engine = os.environ.get("DATABASE_ENGINE", "sqlite" if DEBUG else "postgresql")
+_db_engine = os.environ.get("DATABASE_ENGINE", "sqlite")
 
 if _db_engine == "sqlite":
     DATABASES = {
@@ -113,3 +118,13 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = "DENY"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+}

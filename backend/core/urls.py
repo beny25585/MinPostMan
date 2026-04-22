@@ -8,4 +8,7 @@ urlpatterns = [
     path("collections/<int:pk>/", views.CollectionDetail.as_view()),
     path("saved-requests/", views.SavedRequestList.as_view()),
     path("saved-requests/<int:pk>/", views.SavedRequestDetail.as_view()),
+    path("auth/register/", views.RegisterView.as_view()),
+    path("auth/login/", views.LoginView.as_view()),
+    path("auth/logout/", views.LogoutView.as_view()),
 ]

@@ -1,7 +1,9 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class RequestLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="request_logs")
     method = models.CharField(max_length=10)
     url = models.URLField()
 
@@ -19,6 +21,7 @@ class RequestLog(models.Model):
 
 
 class Collection(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="collections")
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -32,6 +35,7 @@ class Collection(models.Model):
 
 
 class SavedRequest(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="saved_requests")
     collection = models.ForeignKey(
         Collection, on_delete=models.CASCADE, related_name="requests"
     )

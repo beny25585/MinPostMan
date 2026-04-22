@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Bookmark, FolderOpen } from "lucide-react";
+import { X, Bookmark, FolderOpen, Plus } from "lucide-react";
 
 interface Collection {
   id: number;
@@ -15,6 +15,7 @@ interface SaveRequestModalProps {
   onSave: (collectionId: number, name: string) => void;
   collections: Collection[];
   defaultName?: string;
+  onCreateCollection?: () => void;
 }
 
 export function SaveRequestModal({
@@ -23,6 +24,7 @@ export function SaveRequestModal({
   onSave,
   collections,
   defaultName = "",
+  onCreateCollection,
 }: SaveRequestModalProps) {
   const [selectedCollection, setSelectedCollection] = useState<number | null>(null);
   const [name, setName] = useState(defaultName);
@@ -71,9 +73,20 @@ export function SaveRequestModal({
               <p className="text-sm text-muted-foreground">
                 No collections yet.
               </p>
-              <p className="text-xs text-zinc-600 mt-1">
-                Create a collection first to save requests.
+              <p className="text-xs text-zinc-600 mt-1 mb-4">
+                Create a collection to save your request.
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  onCreateCollection?.();
+                  onClose();
+                }}
+                className="px-4 py-2 rounded-md text-sm font-medium bg-indigo-500 text-white hover:bg-indigo-400 transition-colors flex items-center gap-2 mx-auto"
+              >
+                <Plus className="w-4 h-4" />
+                Create Collection
+              </button>
             </div>
           ) : (
             <>

@@ -122,3 +122,4 @@ logs/
 *.sql.gz
 
 AGENTS.md
+.*
