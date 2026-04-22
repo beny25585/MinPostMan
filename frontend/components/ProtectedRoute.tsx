@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
-const PUBLIC_PATHS = ['/login', '/register'];
+const PUBLIC_PATHS = ['/mini_postman/frontend/login', '/mini_postman/frontend/register'];
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -13,7 +13,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !PUBLIC_PATHS.includes(pathname)) {
-      router.push('/login');
+      router.push('/mini_postman/frontend/login');
     }
   }, [isAuthenticated, isLoading, pathname, router]);
 

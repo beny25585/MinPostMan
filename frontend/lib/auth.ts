@@ -85,7 +85,7 @@ axios.interceptors.response.use(
     if (error.response?.status === 401) {
       clearToken();
       if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+        window.location.href = '/mini_postman/frontend/login';
       }
     }
     return Promise.reject(error);
