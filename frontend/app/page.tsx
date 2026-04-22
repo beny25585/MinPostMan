@@ -430,7 +430,7 @@ export default function Home() {
               <button
                 onClick={async () => {
                   await authLogout();
-                  window.location.href = '/mini_postman/frontend/login';
+                  window.location.href = '/login';
                 }}
                 className="p-1.5 rounded-lg hover:bg-sidebar-hover transition-colors"
                 title="Logout"

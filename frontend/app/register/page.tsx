@@ -140,7 +140,7 @@ export default function RegisterPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-zinc-500">
               Already have an account?{' '}
-              <Link href="/mini_postman/frontend/login" className="text-emerald-600 hover:text-emerald-700 transition-colors font-medium">
+              <Link href="/login" className="text-emerald-600 hover:text-emerald-700 transition-colors font-medium">
                 Sign in
               </Link>
             </p>
