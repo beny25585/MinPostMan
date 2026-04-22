@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.models import Token as AuthToken
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 import requests
@@ -326,7 +326,7 @@ class RegisterView(APIView):
             first_name=first_name,
             last_name=last_name
         )
-        token = Token.objects.create(user=user)
+        token = AuthToken.objects.create(user=user)
 
         full_name = f"{first_name} {last_name}".strip() or username
 
@@ -358,7 +358,7 @@ class LoginView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        token, _ = Token.objects.get_or_create(user=user)
+        token, _ = AuthToken.objects.get_or_create(user=user)
 
         full_name = f"{user.first_name} {user.last_name}".strip() or user.username
 
@@ -378,5 +378,5 @@ class LogoutView(APIView):
         try:
             request.user.auth_token.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        except Token.DoesNotExist:
+        except AuthToken.DoesNotExist:
             return Response(status=status.HTTP_204_NO_CONTENT)
